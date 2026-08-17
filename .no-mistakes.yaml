@@ -1,0 +1,2 @@
+# no-mistakes marker. CI is real: .github/workflows/ci.yml runs on PRs and main.
+# A release workflow (build a signed/notarized .app + .dmg) is a follow-up.

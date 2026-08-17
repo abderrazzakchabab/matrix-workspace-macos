@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-linux:
+    name: Test core (Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Swift 6.3.3
+        run: |
+          curl -fsSL https://download.swift.org/swiftly/linux/swiftly-x86_64.tar.gz -o swiftly.tar.gz
+          tar zxf swiftly.tar.gz
+          ./swiftly init --no-modify-profile --assume-yes --quiet-shell-followup
+          ~/.local/share/swiftly/bin/swiftly install 6.3.3 --no-verify --assume-yes
+          echo "$HOME/.local/share/swiftly/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+  build-macos:
+    name: Build on macOS (${{ matrix.runner }})
+    # macos-13 = Intel (x86_64), macos-14 = Apple Silicon (arm64).
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-13, macos-14]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (SwiftUI app + core)
+        run: swift build
+
+      - name: Test core
+        run: swift test

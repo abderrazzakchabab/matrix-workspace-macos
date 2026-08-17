@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+.swiftpm/
+Package.resolved
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+.env
+.env.*
+*.pem
