@@ -10,17 +10,54 @@ It speaks the same control-plane HTTP + SSE contract as the mobile and TUI clien
 - `Sources/MatrixWorkspaceApp` — the SwiftUI app shell (macOS 14+), kept in a separate target that only builds where SwiftUI is available.
 - `Tests/MatrixWorkspaceCoreTests` — unit tests (models, SSE frame parsing/validation, cookie/401 session semantics, endpoint wiring, stream reconnect/resume) runnable on Linux via `swift test`.
 
-## Build & test
+## Building the macOS desktop app
 
-**macOS** (Xcode 15+ / Swift 5.9+):
+### Prerequisites
+
+- A Mac running **macOS 14 (Sonoma)** or later.
+- **Xcode 15** or later, for the Swift toolchain and the macOS SDK. Install it from the Mac App Store, then make sure it is the selected toolchain:
+
+  ```sh
+  sudo xcode-select -s /Applications/Xcode.app
+  swift --version   # should report Swift 5.9 or later
+  ```
+
+### Get the source
 
 ```sh
-swift build
-swift test
-swift run matrix-workspace-macos
+git clone https://github.com/abderrazzakchabab/matrix-workspace-macos.git
+cd matrix-workspace-macos
 ```
 
-**Linux** (core library only; Swift 6.x via [swiftly](https://swift.org/swiftly)):
+### Build, test, and run
+
+```sh
+swift build                      # debug build of the core library + app
+swift test                       # run the core unit tests
+swift run matrix-workspace-macos # launch the app for development
+```
+
+`swift run` starts the app as a bare process, which is fine for iterating. On first launch, sign in with your control-plane URL, homeserver URL, and a Matrix access token.
+
+### Package a double-clickable `.app` (ad-hoc signed, local use)
+
+SwiftPM produces a bare executable, not a Finder-launchable app bundle. Create a minimal bundle from a release build:
+
+```sh
+swift build -c release
+APP=dist/MatrixWorkspace.app
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp .build/release/matrix-workspace-macos "$APP/Contents/MacOS/"
+cp Info.plist "$APP/Contents/Info.plist"
+codesign --force --sign - "$APP"   # ad-hoc signature
+open dist/MatrixWorkspace.app
+```
+
+The bundled app is ad-hoc signed and **not** notarized — fine for building and running on your own Mac, but it will not pass Gatekeeper on other machines. Shipping a Developer ID-signed and notarized `.app`/`.dmg` needs an Apple developer account and a release workflow (see Known limitations).
+
+### Linux (core library only)
+
+The platform-agnostic core and its tests also build on Linux for CI and headless use (Swift 6.x via [swiftly](https://swift.org/swiftly)):
 
 ```sh
 swift build
